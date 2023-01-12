@@ -7,7 +7,10 @@ from django.utils import timezone
 import jwt
 from datetime import datetime, timedelta
 
-# Create your models here.
+
+from django.conf import settings
+
+
 class MyUserManager(UserManager):
     def _create_user(self, username, email, password, **extra_fields):
         """
@@ -47,6 +50,7 @@ class User(AbstractBaseUser, PermissionsMixin, TrackingModel):
     """
     An abstract base class implementing a fully featured User model with
     admin-compliant permissions.
+
     Username and password are required. Other fields are optional.
     """
 
@@ -92,4 +96,14 @@ class User(AbstractBaseUser, PermissionsMixin, TrackingModel):
 
     @property
     def token(self):
-        return ""
+        token = jwt.encode(
+            {
+                "username": self.username,
+                "email": self.email,
+                "exp": datetime.utcnow() + timedelta(hours=24),
+            },
+            settings.SECRET_KEY,
+            algorithm="HS256",
+        )
+
+        return token
